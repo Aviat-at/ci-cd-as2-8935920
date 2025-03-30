@@ -23,7 +23,7 @@ class IAMStack8935920(Stack):
             description="Allows CodeBuild to synth and deploy CDK app"
         )
 
-        # ✅ SSM & S3 asset bucket permissions
+        # SSM & S3 asset bucket permissions
         asset_bucket_name = f"cdk-hnb659fds-assets-{self.account}-{self.region}"
         asset_bucket_arn = f"arn:aws:s3:::{asset_bucket_name}"
         asset_objects_arn = f"{asset_bucket_arn}/*"
@@ -50,7 +50,7 @@ class IAMStack8935920(Stack):
             description="Allows CodePipeline to deploy CDK stacks and access Secrets Manager"
         )
 
-        # ✅ GitHub Secrets read permission for pipeline
+        # GitHub Secrets read permission for pipeline
         self.pipeline_role.add_to_policy(iam.PolicyStatement(
             actions=["secretsmanager:GetSecretValue"],
             resources=[
@@ -58,7 +58,7 @@ class IAMStack8935920(Stack):
             ]
         ))
 
-        # ✅ General deployment permissions for both roles
+        # General deployment permissions for both roles
         for role in [self.pipeline_role, self.codebuild_role]:
             role.add_to_policy(iam.PolicyStatement(
                 actions=[
