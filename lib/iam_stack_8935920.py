@@ -29,7 +29,7 @@ class IAMStack8935920(Stack):
             description="Allows CodeBuild to synth and deploy CDK app"
         )
 
-        # ✅ SSM + S3 Asset Bucket permissions for CodeBuild
+        # ✅ SSM + S3 Asset Bucket permissions for CodeBuild (Moved here 👇)
         self.codebuild_role.add_to_policy(iam.PolicyStatement(
             actions=[
                 "ssm:GetParameter",
