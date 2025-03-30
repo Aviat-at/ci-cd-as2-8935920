@@ -26,6 +26,15 @@ class IAMStack8935920(Stack):
             description="Allows CodeBuild to synth and deploy CDK app"
         )
 
+        self.codebuild_role.add_to_policy(iam.PolicyStatement(
+    actions=[
+        "ssm:GetParameter"
+    ],
+    resources=[
+        f"arn:aws:ssm:{self.region}:{self.account}:parameter/cdk-bootstrap/hnb659fds/version"
+    ]
+))
+
         self.pipeline_role.add_to_policy(iam.PolicyStatement(
             actions=["secretsmanager:GetSecretValue"],
             resources=["arn:aws:secretsmanager:us-east-1:123456789012:secret:github-token*"]
