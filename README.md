@@ -1,58 +1,146 @@
+# AWS CDK CI/CD Deployment Project – Full Documentation
 
-# Welcome to your CDK Python project!
+## Overview
 
-This is a blank project for CDK development with Python.
+This project sets up a full CI/CD pipeline using **AWS CDK (Python)** to deploy a serverless application. It includes:
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+- Lambda + API Gateway deployment
+- CI/CD via CodePipeline & CodeBuild
+- Role-based IAM access control
+- S3 assets and bootstrap management
 
-This project is set up like a standard Python project.  The initialization
-process also creates a virtualenv within this project, stored under the `.venv`
-directory.  To create the virtualenv it assumes that there is a `python3`
-(or `python` for Windows) executable in your path with access to the `venv`
-package. If for any reason the automatic creation of the virtualenv fails,
-you can create the virtualenv manually.
+---
 
-To manually create a virtualenv on MacOS and Linux:
+## Project Structure
 
+- `IAMStack` – IAM roles for CodeBuild, CodePipeline, and Lambda
+- `CoreStack` – Core resources (e.g., buckets)
+- `LambdaStack` – Deploys Lambda + API Gateway
+- `PipelineStack` – CI/CD pipeline with GitHub trigger
+- `buildspec.yml` – Build instructions for CodeBuild
+- `.github/workflows` – GitHub Actions config (optional)
+- `cdk.json`, `app.py` – CDK entry point and config
+
+---
+
+## Prerequisites
+
+1. AWS CLI configured (`aws configure`)
+2. CDK installed globally: `npm install -g aws-cdk`
+3. Python v3.9+ installed with `virtualenv`
+4. Bootstrapped AWS environment for CDK:
+   ```bash
+   cdk bootstrap      --cloudformation-execution-policies arn:aws:iam::aws:policy/AdministratorAccess      --trust arn:aws:iam::<account-id>:role/<build-role>      aws://<account-id>/<region>
+   ```
+
+---
+
+## Deployment Steps
+
+### Step 1: Setup virtualenv
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
-$ python3 -m venv .venv
+
+### Step 2: Deploy IAM Stack
+
+```bash
+cdk deploy IAMStack8935920
 ```
 
-After the init process completes and the virtualenv is created, you can use the following
-step to activate your virtualenv.
+### Step 3: Deploy All Stacks
 
-```
-$ source .venv/bin/activate
-```
-
-If you are a Windows platform, you would activate the virtualenv like this:
-
-```
-% .venv\Scripts\activate.bat
+```bash
+cdk deploy --all
 ```
 
-Once the virtualenv is activated, you can install the required dependencies.
+---
 
+## CodeBuild Execution Flow
+
+1. Install Python & CDK
+2. Install Python dependencies
+3. Run `cdk synth`
+4. Run `cdk deploy --all`
+
+**Success Output Example**:
+- IAMStack8935920 (no changes)
+- LambdaStack8935920 (created)
+- PipelineStack8935920 (GitHub integrated)
+
+---
+
+## Common Errors and Fixes
+
+###  S3 Bucket Access Denied
+
+**Message**: Bucket exists, but access denied
+
+**Fix**:
+- Ensure `cdk-hnb659fds-assets-<account>-<region>` exists
+- Add S3 permissions in `codebuild_role` for:
+  - `s3:GetObject`, `s3:PutObject`, `s3:ListBucket`
+
+---
+
+### Invalid Principal in Policy
+
+**Message**: `Invalid principal in policy: "AWS":"arn:aws:iam::<account>:role/<role-name>"`
+
+**Fix**:
+- The role doesn’t exist yet.
+- Deploy `IAMStack` first.
+- Use correct role ARN in bootstrap.
+
+---
+
+### CDK Bootstrap Failed
+
+**Message**: CDKToolkit failed to deploy
+
+**Fix**:
+- Make sure role used in `--trust` exists
+- Replace placeholders in `cdk bootstrap` with actual role ARNs
+
+```bash
+cdk bootstrap   --cloudformation-execution-policies arn:aws:iam::aws:policy/AdministratorAccess   --trust arn:aws:iam::<account>:role/<CodeBuildRole>   aws://<account>/<region>
 ```
-$ pip install -r requirements.txt
-```
 
-At this point you can now synthesize the CloudFormation template for this code.
+---
 
-```
-$ cdk synth
-```
+## Permissions Summary
 
-To add additional dependencies, for example other CDK libraries, just add
-them to your `setup.py` file and rerun the `pip install -r requirements.txt`
-command.
+### CodeBuild Role
 
-## Useful commands
+- `s3:*` (for asset access)
+- `ssm:GetParameter` (for CDK bootstrapping)
+- `cloudformation:*`, `iam:*`, `logs:*`
 
- * `cdk ls`          list all stacks in the app
- * `cdk synth`       emits the synthesized CloudFormation template
- * `cdk deploy`      deploy this stack to your default AWS account/region
- * `cdk diff`        compare deployed stack with current state
- * `cdk docs`        open CDK documentation
+### CodePipeline Role
 
-Enjoy!
+- `secretsmanager:GetSecretValue` (for GitHub token)
+- `codebuild:*`, `cloudformation:*`, `iam:*`
+
+---
+
+## Final Notes
+
+- Always deploy `IAMStack` first to avoid bootstrap/role errors.
+- Confirm GitHub token is securely stored in Secrets Manager.
+- Run `cdk bootstrap` with correct `--trust` role before first deploy.
+
+---
+
+## Author
+
+- Built by **Akash** using AWS CDK + Python
+
+
+---
+
+## License
+
+MIT License – Free to use, modify, and share.
